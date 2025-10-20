@@ -1,0 +1,27 @@
+﻿<!doctype html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://www.google.com/recaptcha/api.js?onload=recaptchaOnload&render=explicit" async defer></script>
+    <script>
+      var widgetId;
+
+      function recaptchaOnload() {
+        widgetId = grecaptcha.render('captcha-container', {
+          'sitekey': '6LfaDsQrAAAAAL5-o7Tdh1CfZmNOnJCo7N3i3CXI',
+          'callback': onSubmit
+        });
+      }
+
+      function onSubmit(token) {
+        // Gửi token về .NET MAUI qua scheme tùy chỉnh
+        window.location.href = "recaptcha://" + token;
+      }
+    </script>
+  </head>
+  <body>
+    <div style="margin-top:50px; text-align:center;">
+      <div id="captcha-container"></div>
+    </div>
+  </body>
+</html>

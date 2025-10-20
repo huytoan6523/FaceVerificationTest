@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="FaceVerificationTest.MainPage"
+             xmlns:views="clr-namespace:FaceVerificationTest.Views.CCCD"
+             Title=""
+             Shell.NavBarIsVisible="False"
+             >
+    
+    <ScrollView VerticalScrollBarVisibility="Never">
+        <VerticalStackLayout Padding="16" Spacing="12" BackgroundColor="White">
+            <Grid HeightRequest="50" BackgroundColor="White" Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Title -->
+                <Label Text="{Binding Title}" 
+                       FontSize="20" 
+                       FontAttributes="Bold" 
+                       HorizontalOptions="Start"
+                       VerticalOptions="Center"
+                       Grid.Column="1"
+                       />
+            </Grid>
+            <Label Text="Xác thực reCAPTCHA" FontAttributes="Bold" FontSize="18" />
+            <WebView x:Name="CaptchaWebView"
+             HeightRequest="500"
+             Navigating="CaptchaWebView_Navigating" />
+            <Label x:Name="ResultLabel" FontSize="14"/>
+            <Label Text="{Binding CaptchaInput}"/>
+
+            <Button Text="Tiếp tục" Command="{Binding NavigateToFaceCameraPageCommand}" VerticalOptions="Center" HorizontalOptions="Center" WidthRequest="200" HeightRequest="60" CornerRadius="30" BackgroundColor="{Binding BackgroundBtn}" TextColor="White"/>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

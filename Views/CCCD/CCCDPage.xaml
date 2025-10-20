@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="FaceVerificationTest.Views.CCCD.CCCDPage"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             Title=""
+             Shell.NavBarIsVisible="False">
+
+    <Grid RowDefinitions="Auto, *" VerticalOptions="Fill">
+        <Grid HeightRequest="50" BackgroundColor="White" Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <!-- Back Button -->
+            <Button ImageSource="back.png"
+            HorizontalOptions="Start"
+            VerticalOptions="Center"
+            BackgroundColor="White"
+            Command="{Binding BackPageCommand}"
+            />
+            <!-- Title -->
+            <Label Text="{Binding Title}" 
+           FontSize="20" 
+           FontAttributes="Bold" 
+           HorizontalOptions="Start"
+           VerticalOptions="Center"
+           Grid.Column="1"
+           />
+        </Grid>
+
+
+        <Grid Grid.Row="1">
+        <!-- Camera full màn hình -->
+        <toolkit:CameraView x:Name="CameraPreview"
+                            Loaded="CameraPreview_Loaded"
+                            VerticalOptions="Center"
+                            HorizontalOptions="Fill" />
+
+        <!-- Overlay Grid 3 dòng -->
+        <Grid RowDefinitions="*, Auto, *" ColumnDefinitions="*" VerticalOptions="Fill">
+
+            <!-- Dòng 1: hình preview / tiêu đề -->
+            <Grid Grid.Row="0" ColumnDefinitions="*,*" ColumnSpacing="10" BackgroundColor="Black">
+                <Image Grid.Column="0" BackgroundColor="Black"
+                   Source="{Binding FrontImage}"
+                   Aspect="AspectFill"
+                   HeightRequest="100"
+                   WidthRequest="160"
+                   HorizontalOptions="End"
+                   VerticalOptions="Center"
+                   Margin="0,20,0,20"/>
+                <Image Grid.Column="1" BackgroundColor="Black"
+                   Source="{Binding BackImage}"
+                   Aspect="AspectFill"
+                   HeightRequest="100"
+                       WidthRequest="160"
+                   HorizontalOptions="Start"
+                   VerticalOptions="Center"
+                   Margin="0,20,0,20"/>
+            </Grid>
+            <!-- Khung CCCD nằm ngang ở giữa -->
+            <Border x:Name="CccdFrame"
+                        Grid.Row="1"
+                        Stroke="Transparent"
+                        StrokeThickness="0"
+                        BackgroundColor="Transparent"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="Center">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="300" />
+                    <!-- Làm hình tròn -->
+                </Border.StrokeShape>
+            </Border>
+
+            <!-- Dòng 3: Nút chụp / next -->
+            <Grid Grid.Row="2" Padding="20"
+                  ColumnDefinitions="*,*"
+                  ColumnSpacing="10"
+                  HorizontalOptions="Fill"
+                  BackgroundColor="Black"
+                  >
+
+                <Button Grid.ColumnSpan="2"
+                    Padding="20"
+                    ImageSource="camera.png"
+                    WidthRequest="70"
+                    HeightRequest="70"
+                    CornerRadius="35"
+                    BackgroundColor="White"
+                    HorizontalOptions="Center"
+                    Command="{Binding CapturePhotoCommand}"
+                        IsVisible="{Binding IsCapturing}"/>
+
+                <Button Grid.Column="0"
+                        Text="Chụp lại"
+                        HeightRequest="50"
+                        TextColor="Black"
+                        BackgroundColor="White"
+                        Command="{Binding CapturePhotoCommand}"
+                        IsVisible="{Binding IsNext}"
+                        />
+
+                <Button Grid.Column="2"
+                        Text="Xác nhận"
+                        HeightRequest="50"
+                        BackgroundColor="Green"
+                        Command="{Binding NextCapturePhotoCommand}"
+                        IsVisible="{Binding IsNext}"
+                        />
+            </Grid>
+
+        </Grid>
+    </Grid>
+
+    </Grid>
+</ContentPage>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="FaceVerificationTest.Views.Popups.ResultPopupPage"
+             Shell.PresentationMode="Modal"
+             BackgroundColor="Transparent"
+             >
+    <Grid BackgroundColor="Transparent">
+        <VerticalStackLayout
+        VerticalOptions="Fill"
+        HorizontalOptions="Fill"
+            BackgroundColor="Black"
+            Opacity="0.4">
+            <VerticalStackLayout.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnBackgroundTapped"/>
+            </VerticalStackLayout.GestureRecognizers>
+        </VerticalStackLayout>
+
+        <Grid Grid.Row="0"
+              Margin="5"
+              BackgroundColor="Transparent"
+              VerticalOptions="Center"
+              >
+            <Grid RowDefinitions="*, *, *" IsVisible="{Binding IsBusy}" HorizontalOptions="Center">
+                <ActivityIndicator Grid.Row="0" IsRunning="true" HorizontalOptions="Center"/>
+                <Label Grid.Row="1" Text="Chúng tôi đang tiến hành xác thực" FontAttributes="Bold" FontSize="16" TextColor="White" HorizontalOptions="Center" VerticalOptions="Center" Margin="10,0,0,0"/>
+                <Label Grid.Row="2" Text="Vui lòng chờ trong giây lát" FontAttributes="None" FontSize="14" TextColor="White" HorizontalOptions="Center" VerticalOptions="Center" Margin="10,0,0,0"/>
+            </Grid>
+            <Grid ColumnDefinitions="Auto, Auto" IsVisible="{Binding IsSuccess}" BackgroundColor="White" HorizontalOptions="Center">
+                <Image Grid.Column="0" Source="check_mark.png" HeightRequest="50" WidthRequest="50"/>
+                <Label Grid.Column="1" Text="Xác thực thành công!" FontAttributes="Bold" FontSize="25" VerticalOptions="Center" Margin="10,0,0,0"/>
+            </Grid>
+            <Grid RowDefinitions="Auto, Auto" ColumnDefinitions="3*, 7*" IsVisible="{Binding IsFall}" BackgroundColor="White" HorizontalOptions="Fill">
+                <Image Grid.Row ="0" Grid.Column="0" Source="check_false.png" HeightRequest="50" WidthRequest="50"/>
+                <Label Grid.Row ="0" Grid.Column="1" Text="Xác thực thất bại" FontAttributes="Bold" FontSize="25" VerticalOptions="Center" HorizontalOptions="Start" Margin="10,0,0,0"/>
+                <Label Grid.Row ="1" Grid.ColumnSpan="2" Text="{Binding ErroMess}" FontAttributes="None" TextColor="Black" FontSize="16" VerticalOptions="Center" HorizontalOptions="Center" Margin="10,0,0,0"/>
+            </Grid>
+        </Grid>
+        <Grid Grid.Row="0"
+              Margin="5"
+              BackgroundColor="Transparent"
+              VerticalOptions="End"
+              IsVisible="{Binding IsSuccess}"
+              >
+            <Button Text="Quay về trang chủ" Command="{Binding BackCommand}" HorizontalOptions="Center" WidthRequest="200" HeightRequest="60" CornerRadius="30" BackgroundColor="#4CAF50" TextColor="White"/>
+        </Grid>
+        <Grid ColumnDefinitions="*,*" Grid.Row="0" IsVisible="{Binding IsFall}" VerticalOptions="End" HeightRequest="80" Padding="10" ColumnSpacing="10">
+
+            <Button Grid.Column="0" Text="Chụp lại mặt" Command="{Binding BackPageCapchaCommand}" HorizontalOptions="Fill"  CornerRadius="30" BackgroundColor="White" TextColor="Black"/>
+
+            <Button Grid.Column="1" Text="Chụp lại toàn bộ" Command="{Binding BackCommand}" HorizontalOptions="Fill" CornerRadius="30" BackgroundColor="#4CAF50" TextColor="White"/>
+
+        </Grid>
+    </Grid>
+</ContentPage>
