@@ -1,4 +1,5 @@
-using CommunityToolkit.Maui.Core;
+﻿using CommunityToolkit.Maui.Core;
+using FaceVerificationTest.Helpers;
 using FaceVerificationTest.Services;
 using FaceVerificationTest.ViewModels;
 
@@ -26,6 +27,21 @@ public partial class CCCDPage : ContentPage
 
         CccdFrame.WidthRequest = frameWidth;
         CccdFrame.HeightRequest = frameHeight;
+    }
+
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+        Dispatcher.Dispatch(async () =>
+        {
+            bool hasPermission = await CameraPermissionHelper.CheckAndRequestCameraPermissionAsync();
+            if (!hasPermission)
+            {
+                await DisplayAlert("Thong bao", "Ứng dụng cần quyền truy cập camera để tiếp tục.", "OK");
+                await Shell.Current.GoToAsync("..");
+                return ;
+            }
+        });
     }
 
     protected override void OnDisappearing()
