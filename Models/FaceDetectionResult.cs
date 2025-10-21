@@ -10,6 +10,10 @@
         public float LeftEyeOpenProb { get; set; }
         public float RightEyeOpenProb { get; set; }
         public string LightingCondition { get; set; }
+
+        public int FaceCount { get; set; }
+        public bool HasFaces => FaceCount > 0;
+        public float OverallConfidence { get; set; }
     }
 
     public class RealtimeConfig

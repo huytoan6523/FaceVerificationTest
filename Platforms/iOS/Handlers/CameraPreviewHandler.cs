@@ -293,7 +293,7 @@ namespace FaceVerificationTest.Platforms.iOS.Handlers
             public SampleBufferDelegate(CameraPreviewHandler handler)
             {
                 _handler = handler;
-                _frameSkipRatio = _handler._isFrameReadySubscribed ? 2 : 1; // Skip 1/2 frames cho realtime
+                _frameSkipRatio = _handler._isFrameReadySubscribed ? 2 : 1;
             }
 
             public override void DidOutputSampleBuffer(AVCaptureOutput output, CMSampleBuffer sampleBuffer, AVCaptureConnection connection)
