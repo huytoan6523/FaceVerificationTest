@@ -73,8 +73,8 @@ namespace FaceVerificationTest.ViewModels
 
                 if (string.IsNullOrEmpty(goFaceCameraPage))
                 {
-
-                await Shell.Current.GoToAsync(nameof(Views.CCCD.CCCDPage));
+                    
+                    await Shell.Current.GoToAsync(nameof(Views.CCCD.CCCDPage));
                     return;
                 }
                 GoFaceCameraPage = null;
