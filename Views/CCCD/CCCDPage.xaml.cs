@@ -43,7 +43,7 @@ public partial class CCCDPage : ContentPage
                 return ;
             }
             //await CameraPreview.StartCameraPreview(CancellationToken.None);
-            await DisplayAlert("Thong bao", "Chon camera", "OK");
+            //await DisplayAlert("Thong bao", "Chon camera", "OK");
         });
     }
 
@@ -72,35 +72,43 @@ public partial class CCCDPage : ContentPage
 
     private async void CameraPreview_Loaded(object sender, EventArgs e)
     {
-        Dispatcher.Dispatch(async () =>
+        try
         {
-            try
+            _vm._cameraView = CameraPreview;
+
+            // 1️⃣ Chờ UI render xong một chút (rất quan trọng trên iOS)
+            await Task.Delay(200);
+
+            // 2️⃣ Lấy danh sách camera
+            var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+            var cameras = await CameraPreview.GetAvailableCameras(cancellationTokenSource.Token);
+
+            // 3️⃣ Chọn camera sau (nếu có)
+            var rearCamera = cameras.FirstOrDefault(c => c.Position == CameraPosition.Rear)
+                          ?? cameras.FirstOrDefault(); // fallback nếu chỉ có 1 camera
+
+            if (rearCamera == null)
             {
-                _vm._cameraView = CameraPreview;
-                await CameraPreview.StartCameraPreview(CancellationToken.None);
-                await DisplayAlert("Thong bao", "Chon camera", "OK");
-                var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(3));
-                var cameras = await CameraPreview.GetAvailableCameras(cancellationTokenSource.Token);
-                var rearCamera = cameras.FirstOrDefault(c => c.Position == CameraPosition.Rear);
-                await DisplayAlert("Thong bao", "Chon camera2", "OK");
-                if (rearCamera != null)
-                {
-                    CameraPreview.SelectedCamera = rearCamera;
-                    if (CameraPreview.IsVisible)
-                    {
-                        await CameraPreview.StartCameraPreview(CancellationToken.None);
-                        Console.WriteLine(" Camera started successfully.");
-                    }
-                }
-                else
-                {
-                    Console.WriteLine(" No rear camera found.");
-                }
+                await DisplayAlert("Lỗi", "Không tìm thấy camera nào!", "OK");
+                return;
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($" Camera start error: {ex.Message}");
-            }
-        });
+
+            // 4️⃣ Gán camera và khởi động
+            CameraPreview.SelectedCamera = rearCamera;
+
+            // Dừng trước để chắc chắn session sạch
+            CameraPreview.StopCameraPreview();
+
+            // Khởi động lại camera
+            await CameraPreview.StartCameraPreview(CancellationToken.None);
+
+            Console.WriteLine("✅ Camera started successfully.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Camera start error: {ex.Message}");
+            await DisplayAlert("Lỗi", $"Camera không khởi động được: {ex.Message}", "OK");
+        }
+
     }
 }
