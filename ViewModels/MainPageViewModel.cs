@@ -12,7 +12,7 @@ namespace FaceVerificationTest.ViewModels
         private VerificationImageService _verificationImageService;
 
         [ObservableProperty]
-        private string goFaceCameraPage;
+        private string _goFaceCameraPage;
 
         public WebView _webCaptcha;
 
@@ -71,7 +71,7 @@ namespace FaceVerificationTest.ViewModels
                 BackgroundBtn = Colors.LightBlue;
 
 
-                if (string.IsNullOrEmpty(goFaceCameraPage))
+                if (string.IsNullOrEmpty(GoFaceCameraPage))
                 {
                     
                     await Shell.Current.GoToAsync(nameof(Views.CCCD.CCCDPage));

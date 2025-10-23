@@ -66,7 +66,7 @@ namespace FaceVerificationTest.ViewModels
 #if ANDROID
             _tfService = new TensorFlowService();
 #elif IOS
-    _tfService = new VisionFaceService();
+    _tfService = null;
 #else
     _tfService = null;
 #endif
