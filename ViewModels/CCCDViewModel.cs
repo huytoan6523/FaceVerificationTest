@@ -17,13 +17,13 @@ using CommunityToolkit.Maui.Extensions;
 #if ANDROID
 using FaceVerificationTest.Platforms.Android.Services;
 #elif IOS
-
+using FaceVerificationTest.Platforms.iOS.Services;
 #endif
 namespace FaceVerificationTest.ViewModels
 {
     public partial class CCCDViewModel : BaseViewModel
     {
-        public readonly ITensorFlowService _tfService;
+        public readonly Services.ITensorFlowService _tfService;
 
         public CameraView _cameraView { get; set; }
         public Image _image { get; set; }
@@ -66,7 +66,7 @@ namespace FaceVerificationTest.ViewModels
 #if ANDROID
             _tfService = new TensorFlowService();
 #elif IOS
-    _tfService = null;
+    _tfService = new VisionFaceService();
 #else
     _tfService = null;
 #endif

@@ -16,6 +16,8 @@ namespace FaceVerificationTest
                 {
 #if ANDROID
                 handlers.AddHandler(typeof(Controls.Camera.CameraPreview), typeof(Platforms.Android.Handlers.CameraPreviewHandler));
+#elif IOS
+                handlers.AddHandler(typeof(Controls.Camera.CameraPreview), typeof(Platforms.iOS.Handlers.CameraPreviewHandler));
 #endif
                 })
                 .ConfigureFonts(fonts =>

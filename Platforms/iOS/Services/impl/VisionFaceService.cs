@@ -7,89 +7,71 @@ using Vision;
 
 namespace FaceVerificationTest.Platforms.iOS.Services
 {
-    public class VisionFaceService : IFaceService
+    public class VisionFaceService : ITensorFlowService, IDisposable
     {
         private readonly RealtimeConfig _config;
+        private bool _isProcessing = false;
 
         public VisionFaceService(RealtimeConfig config = null)
         {
             _config = config ?? new RealtimeConfig();
         }
 
-        public async Task<FaceDetectionResult> DetectFacesAsync(byte[] imageBytes, int width, int height, int rotation = 0)
+        public async Task<FaceDetectionResult> IsFaceCloseEnoughAsync(byte[] imageBytes, int width = 640, int height = 480, int rotation = 0)
         {
-            var result = new FaceDetectionResult();
-
-            if (imageBytes == null || imageBytes.Length == 0)
+            if (_isProcessing || imageBytes == null || imageBytes.Length == 0)
             {
-                result.Errors.Add("Image data is null or empty");
-                return result;
+                return new FaceDetectionResult { Errors = new List<string> { "Đang xử lý hoặc dữ liệu rỗng" } };
             }
+
+            _isProcessing = true;
 
             try
             {
-                // Chuyển byte[] sang UIImage
                 using var data = NSData.FromArray(imageBytes);
                 using var uiImage = UIImage.LoadFromData(data);
 
                 if (uiImage == null)
                 {
-                    result.Errors.Add("Cannot create UIImage from data");
-                    return result;
+                    return new FaceDetectionResult { Errors = new List<string> { "Không thể tạo UIImage từ dữ liệu" } };
                 }
 
-                // Sử dụng completion handler
+                // Sử dụng TaskCompletionSource để đồng bộ hóa
+                var completionSource = new TaskCompletionSource<FaceDetectionResult>();
+
                 var faceRequest = new VNDetectFaceRectanglesRequest((request, error) =>
                 {
-                    // Completion handler sẽ được gọi khi request hoàn thành
-                    ProcessFaceDetectionResult(request, error, width, height, result);
+                    var result = ProcessFaceDetectionResult(request, error, width, height);
+                    completionSource.TrySetResult(result);
                 });
 
-                var handler = new VNImageRequestHandler(uiImage.CGImage, new NSDictionary());
+                using var handler = new VNImageRequestHandler(uiImage.CGImage, new NSDictionary());
+                handler.Perform(new VNRequest[] { faceRequest }, out _);
 
-                // Thực thi request
-                bool success = handler.Perform(new VNRequest[] { faceRequest }, out NSError performError);
+                // Đợi kết quả
+                var result = await completionSource.Task;
 
-                if (performError != null)
-                {
-                    result.Errors.Add($"Vision perform error: {performError.LocalizedDescription}");
-                    return result;
-                }
-
-                if (!success)
-                {
-                    result.Errors.Add("Face detection failed");
-                    return result;
-                }
-
-                // Đợi một chút để completion handler chạy (trong thực tế có thể cần synchronization)
-                await Task.Delay(100);
-
-                // Kiểm tra kết quả
-                if (result.FaceCount > _config.MaxFaces)
-                {
-                    result.Errors.Add($"Too many faces detected: {result.FaceCount}. Maximum allowed: {_config.MaxFaces}");
-                    return result;
-                }
-
-                // Kiểm tra điều kiện "perfect face"
-                result.IsPerfect = CheckPerfectFaceConditions(result);
-
-                return result;
+                // Áp dụng logic quality check tương tự Android
+                return AnalyzeRealtime(result, width, height);
             }
             catch (Exception ex)
             {
-                result.Errors.Add($"Exception: {ex.Message}");
-                return result;
+                return new FaceDetectionResult { Errors = new List<string> { $"Lỗi xử lý: {ex.Message}" } };
+            }
+            finally
+            {
+                _isProcessing = false;
             }
         }
 
-        private void ProcessFaceDetectionResult(VNRequest request, NSError error, int width, int height, FaceDetectionResult result)
+        private FaceDetectionResult ProcessFaceDetectionResult(VNRequest request, NSError error, int width, int height)
         {
+            var result = new FaceDetectionResult();
+
             if (error != null)
             {
-                result.Errors.Add($"Vision completion error: {error.LocalizedDescription}");
-                return;
+                result.Errors.Add($"Lỗi Vision: {error.LocalizedDescription}");
+                return result;
             }
 
             var faces = request.GetResults<VNFaceObservation>();
@@ -97,39 +79,84 @@ namespace FaceVerificationTest.Platforms.iOS.Services
 
             if (result.FaceCount == 0)
             {
-                result.Errors.Add("No faces detected");
-                return;
+                result.Errors.Add("Không tìm thấy khuôn mặt");
+                return result;
             }
 
-            // Tính toán các metrics
-            CalculateFaceMetrics(faces, width, height, result);
+            // Tính toán metrics cho khuôn mặt đầu tiên
+            var primaryFace = faces[0];
+            CalculateFaceMetrics(primaryFace, width, height, result);
+
+            return result;
         }
 
-        private void CalculateFaceMetrics(VNFaceObservation[] faces, int width, int height, FaceDetectionResult result)
+        private void CalculateFaceMetrics(VNFaceObservation face, int width, int height, FaceDetectionResult result)
         {
-            if (faces == null || faces.Length == 0) return;
+            var boundingBox = face.BoundingBox;
 
-            var primaryFace = faces[0]; // Lấy khuôn mặt đầu tiên
+            // Tính kích thước khuôn mặt (tương tự Android)
+            result.FaceSizePercentage = (float)((boundingBox.Width * boundingBox.Height) / (width * height)) * 100f;
 
-            // Tính kích thước khuôn mặt
-            var boundingBox = primaryFace.BoundingBox;
-            var faceArea = boundingBox.Width * boundingBox.Height;
-            var imageArea = width * height;
-            result.FaceSizePercentage = (float)(faceArea / imageArea) * 100f;
-
-            // Head tilt (nếu có)
-            result.HeadTiltY = (float)((primaryFace.Yaw?.Value ?? 0f) * 180f / (float)Math.PI);
-            result.HeadTiltZ = (float)((primaryFace.Roll?.Value ?? 0f) * 180f / (float)Math.PI);
+            // Head pose
+            result.HeadTiltY = (float)((face.Yaw?.Value ?? 0) * 180 / Math.PI);
+            result.HeadTiltZ = (float)((face.Roll?.Value ?? 0) * 180 / Math.PI);
 
             // Confidence
-            result.OverallConfidence = primaryFace.Confidence;
+            result.OverallConfidence = face.Confidence;
 
-            // Đánh giá ánh sáng dựa trên confidence
-            result.LightingCondition = EvaluateLightingCondition(primaryFace.Confidence);
+            // Đánh giá ánh sáng
+            result.LightingCondition = EvaluateLightingCondition(face.Confidence);
 
-            // Giá trị mặc định cho eye openness
-            result.LeftEyeOpenProb = 0.8f;
-            result.RightEyeOpenProb = 0.8f;
+            // Để trống thay vì fake data
+            result.LeftEyeOpenProb = 0f;
+            result.RightEyeOpenProb = 0f;
+        }
+
+        private FaceDetectionResult AnalyzeRealtime(FaceDetectionResult detectionResult, int width, int height)
+        {
+            if (detectionResult.Errors.Any())
+                return detectionResult;
+
+            var errors = new List<string>();
+
+            // 1. Kiểm tra số lượng khuôn mặt (giống Android)
+            if (detectionResult.FaceCount > _config.MaxFaces)
+            {
+                errors.Add($"Quá nhiều khuôn mặt: {detectionResult.FaceCount}. Tối đa: {_config.MaxFaces}");
+            }
+
+            // 2. Kiểm tra kích thước khuôn mặt
+            if (detectionResult.FaceSizePercentage < _config.MinFaceSize * 100f)
+            {
+                errors.Add("Khuôn mặt quá nhỏ - lại gần hơn");
+            }
+            else if (detectionResult.FaceSizePercentage > _config.MaxFaceSize * 100f)
+            {
+                errors.Add("Khuôn mặt quá lớn - lùi xa hơn");
+            }
+
+            // 3. Kiểm tra góc nghiêng đầu
+            if (Math.Abs(detectionResult.HeadTiltY) > _config.MaxHeadTiltY)
+            {
+                errors.Add($"Đầu nghiêng ngang quá nhiều: {detectionResult.HeadTiltY:F1}°");
+            }
+
+            if (Math.Abs(detectionResult.HeadTiltZ) > _config.MaxHeadTiltZ)
+            {
+                errors.Add($"Đầu nghiêng dọc quá nhiều: {detectionResult.HeadTiltZ:F1}°");
+            }
+
+            // 4. Kiểm tra confidence
+            if (detectionResult.OverallConfidence < 0.9f)
+            {
+                errors.Add($"Chất lượng ảnh kém - độ tin cậy thấp: {detectionResult.OverallConfidence:P0}");
+            }
+
+            // Cập nhật errors và kiểm tra perfect condition
+            detectionResult.Errors = errors;
+            detectionResult.IsPerfect = !errors.Any() && detectionResult.FaceCount == 1;
+
+            return detectionResult;
         }
 
         private string EvaluateLightingCondition(float confidence)
@@ -139,22 +166,9 @@ namespace FaceVerificationTest.Platforms.iOS.Services
             return "Poor";
         }
 
-        private bool CheckPerfectFaceConditions(FaceDetectionResult result)
+        public void Dispose()
         {
-            if (result.FaceCount != 1) return false;
-            if (result.Errors.Any()) return false;
-
-            return result.FaceSizePercentage >= _config.MinFaceSize * 100f &&
-                   result.FaceSizePercentage <= _config.MaxFaceSize * 100f &&
-                   Math.Abs(result.HeadTiltY) <= _config.MaxHeadTiltY &&
-                   Math.Abs(result.HeadTiltZ) <= _config.MaxHeadTiltZ &&
-                   result.OverallConfidence >= 0.9f;
-        }
-
-        public async Task<bool> HasFacesAsync(byte[] imageBytes)
-        {
-            var result = await DetectFacesAsync(imageBytes, 640, 480);
-            return result.HasFaces;
+            // Cleanup if needed
         }
     }
 }
