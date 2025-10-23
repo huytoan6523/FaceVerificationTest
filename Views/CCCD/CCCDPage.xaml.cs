@@ -13,7 +13,7 @@ public partial class CCCDPage : ContentPage
     {
         InitializeComponent();
         _vm = cCCDViewModel;
-        _vm._cameraView = CameraPreview;
+
         BindingContext = _vm;
         this.SizeChanged += OnPageSizeChanged;
     }
@@ -42,7 +42,7 @@ public partial class CCCDPage : ContentPage
                 await Shell.Current.GoToAsync("..");
                 return ;
             }
-            await CameraPreview.StartCameraPreview(CancellationToken.None);
+            //await CameraPreview.StartCameraPreview(CancellationToken.None);
         });
     }
 
@@ -75,6 +75,7 @@ public partial class CCCDPage : ContentPage
         {
             try
             {
+                _vm._cameraView = CameraPreview;
                 await DisplayAlert("Thong bao", "Chon camera", "OK");
                 var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(3));
                 var cameras = await CameraPreview.GetAvailableCameras(cancellationTokenSource.Token);
