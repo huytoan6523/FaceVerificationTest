@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Maui.Core;
+using CommunityToolkit.Maui.Views;
 using FaceVerificationTest.Helpers;
 using FaceVerificationTest.Services;
 using FaceVerificationTest.ViewModels;
@@ -41,6 +42,7 @@ public partial class CCCDPage : ContentPage
                 await Shell.Current.GoToAsync("..");
                 return ;
             }
+            await CameraPreview.StartCameraPreview(CancellationToken.None);
         });
     }
 
@@ -73,10 +75,11 @@ public partial class CCCDPage : ContentPage
         {
             try
             {
+                await DisplayAlert("Thong bao", "Chon camera", "OK");
                 var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(3));
                 var cameras = await CameraPreview.GetAvailableCameras(cancellationTokenSource.Token);
                 var rearCamera = cameras.FirstOrDefault(c => c.Position == CameraPosition.Rear);
-
+                await DisplayAlert("Thong bao", "Chon camera2", "OK");
                 if (rearCamera != null)
                 {
                     CameraPreview.SelectedCamera = rearCamera;
