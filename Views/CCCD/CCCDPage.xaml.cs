@@ -43,6 +43,7 @@ public partial class CCCDPage : ContentPage
                 return ;
             }
             //await CameraPreview.StartCameraPreview(CancellationToken.None);
+            await DisplayAlert("Thong bao", "Chon camera", "OK");
         });
     }
 
@@ -76,6 +77,7 @@ public partial class CCCDPage : ContentPage
             try
             {
                 _vm._cameraView = CameraPreview;
+                await CameraPreview.StartCameraPreview(CancellationToken.None);
                 await DisplayAlert("Thong bao", "Chon camera", "OK");
                 var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(3));
                 var cameras = await CameraPreview.GetAvailableCameras(cancellationTokenSource.Token);
