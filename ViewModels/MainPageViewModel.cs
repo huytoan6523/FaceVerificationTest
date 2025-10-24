@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using FaceVerificationTest.Helpers;
 using FaceVerificationTest.Services;
 using System.Diagnostics;
 using System.Threading;
@@ -73,8 +74,16 @@ namespace FaceVerificationTest.ViewModels
 
                 if (string.IsNullOrEmpty(GoFaceCameraPage))
                 {
-                    
-                    await Shell.Current.GoToAsync(nameof(Views.CCCD.CCCDPage));
+
+                  
+                        bool hasPermission = await CameraPermissionHelper.CheckAndRequestCameraPermissionAsync();
+                        if (!hasPermission)
+                        {
+                            
+                            return;
+                        }
+                        
+                    await Shell.Current.GoToAsync(nameof(Views.Test.TestCam));
                     return;
                 }
                 GoFaceCameraPage = null;

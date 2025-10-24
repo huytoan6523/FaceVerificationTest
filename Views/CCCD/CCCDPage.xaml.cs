@@ -42,6 +42,7 @@ public partial class CCCDPage : ContentPage
                 await Shell.Current.GoToAsync("..");
                 return ;
             }
+            await Task.Delay(200);
             //await CameraPreview.StartCameraPreview(CancellationToken.None);
             //await DisplayAlert("Thong bao", "Chon camera", "OK");
         });
